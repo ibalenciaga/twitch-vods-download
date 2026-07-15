@@ -3,15 +3,447 @@
 ---
 
 <html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<link rel="icon" href="/favicon.ico" />
-		<meta name="viewport" content="width=device-width" />
-		<meta name="generator" content={Astro.generator} />
-		<title>Astro</title>
-	</head>
-	<body>
-		<h1>Astro</h1>
-	</body>
+    <head>
+        <meta charset="utf-8" />
+        <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+        <link rel="icon" href="/favicon.ico" />
+        <meta name="viewport" content="width=device-width" />
+        <meta name="generator" content={Astro.generator} />
+        <title>Twitch VOD Downloader Local</title>
+        <style>
+            :root {
+                --bg: #f2efe8;
+                --bg-accent: #e8dcc7;
+                --surface: #fffaf2;
+                --ink: #2a251d;
+                --muted: #6b6254;
+                --brand: #175f5d;
+                --brand-soft: #d5eceb;
+                --danger: #9e2a2b;
+                --ok: #2d6a4f;
+                --border: #d7ccb7;
+            }
+
+            * {
+                box-sizing: border-box;
+            }
+
+            body {
+                margin: 0;
+                min-height: 100vh;
+                font-family: 'Avenir Next', 'Segoe UI', sans-serif;
+                color: var(--ink);
+                background:
+                    radial-gradient(circle at 15% 20%, #fff 0%, var(--bg) 60%),
+                    linear-gradient(140deg, var(--bg) 0%, var(--bg-accent) 100%);
+                display: grid;
+                place-items: center;
+                padding: 24px;
+            }
+
+            .card {
+                width: min(880px, 100%);
+                background: var(--surface);
+                border: 1px solid var(--border);
+                border-radius: 18px;
+                box-shadow: 0 18px 30px rgba(33, 27, 16, 0.1);
+                padding: 24px;
+                display: grid;
+                gap: 16px;
+                overflow: hidden;
+            }
+
+            .card > * {
+                min-width: 0;
+            }
+
+            h1 {
+                margin: 0;
+                font-size: clamp(1.5rem, 2.5vw, 2rem);
+                line-height: 1.15;
+            }
+
+            .subtitle {
+                margin: 0;
+                color: var(--muted);
+                font-size: 0.98rem;
+            }
+
+            .input-row {
+                display: grid;
+                grid-template-columns: 1fr auto auto;
+                gap: 10px;
+            }
+
+            input {
+                width: 100%;
+                padding: 12px 14px;
+                border-radius: 11px;
+                border: 1px solid var(--border);
+                background: #fff;
+                font-size: 0.95rem;
+            }
+
+            button {
+                border: none;
+                padding: 12px 16px;
+                border-radius: 11px;
+                font-size: 0.95rem;
+                font-weight: 700;
+                cursor: pointer;
+                background: var(--brand);
+                color: #fff;
+                transition: transform 120ms ease;
+            }
+
+            .secondary-btn {
+                background: #f0e7d8;
+                color: #3f382e;
+                border: 1px solid var(--border);
+            }
+
+            button:disabled {
+                opacity: 0.7;
+                cursor: not-allowed;
+            }
+
+            button:not(:disabled):hover {
+                transform: translateY(-1px);
+            }
+
+            .badge {
+                display: inline-flex;
+                padding: 4px 10px;
+                border-radius: 999px;
+                font-size: 0.84rem;
+                font-weight: 700;
+                letter-spacing: 0.01em;
+            }
+
+            .badge.idle,
+            .badge.running {
+                background: var(--brand-soft);
+                color: #164847;
+            }
+
+            .badge.done {
+                background: #d9f4e8;
+                color: var(--ok);
+            }
+
+            .badge.error {
+                background: #f9d9d9;
+                color: var(--danger);
+            }
+
+            pre {
+                margin: 0;
+                max-height: 240px;
+                overflow: auto;
+                padding: 12px;
+                background: #1f1f1f;
+                color: #f0f0f0;
+                border-radius: 12px;
+                font-size: 0.78rem;
+                white-space: pre-wrap;
+                overflow-wrap: anywhere;
+                word-break: break-word;
+            }
+
+            .steps,
+            .outputs {
+                display: grid;
+                gap: 8px;
+                padding: 0;
+                margin: 0;
+                list-style: none;
+            }
+
+            .steps li,
+            .outputs li {
+                border: 1px solid var(--border);
+                border-radius: 10px;
+                padding: 10px 12px;
+                background: #fff;
+                overflow-wrap: anywhere;
+                word-break: break-word;
+            }
+
+            .label {
+                font-size: 0.88rem;
+                font-weight: 700;
+                color: var(--muted);
+                margin-bottom: 6px;
+            }
+
+            .error {
+                color: var(--danger);
+                font-weight: 600;
+            }
+
+            @media (max-width: 640px) {
+                .input-row {
+                    grid-template-columns: 1fr;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <main class="card">
+            <h1>Twitch VOD + Chat (Local)</h1>
+            <p class="subtitle">
+                Introduce una URL tipo https://www.twitch.tv/videos/2818539320 y
+                la app generara VOD y chat-alpha.mov (transparente) en
+                Descargas.
+            </p>
+
+            <div class="input-row">
+                <input
+                    id="vod-input"
+                    placeholder="https://www.twitch.tv/videos/2818539320"
+                    autocomplete="off"
+                />
+                <button id="run-btn">Generar Archivos</button>
+                <button id="reset-btn" class="secondary-btn" type="button">
+                    Nuevo Video
+                </button>
+            </div>
+
+            <div>
+                <span id="status-badge" class="badge idle">idle</span>
+                <p id="status-text" class="subtitle">Esperando URL.</p>
+                <p id="error-text" class="error" hidden></p>
+            </div>
+
+            <section>
+                <div class="label">Pasos</div>
+                <ul id="steps" class="steps"></ul>
+            </section>
+
+            <section>
+                <div class="label">Archivos generados</div>
+                <ul id="outputs" class="outputs"></ul>
+            </section>
+
+            <section>
+                <div class="label">Logs</div>
+                <pre id="logs">(sin logs)</pre>
+            </section>
+        </main>
+
+        <script>
+            // @ts-nocheck
+            const vodInput = document.getElementById('vod-input')
+            const runBtn = document.getElementById('run-btn')
+            const resetBtn = document.getElementById('reset-btn')
+            const statusBadge = document.getElementById('status-badge')
+            const statusText = document.getElementById('status-text')
+            const errorText = document.getElementById('error-text')
+            const logsBox = document.getElementById('logs')
+            const stepsList = document.getElementById('steps')
+            const outputsList = document.getElementById('outputs')
+
+            let currentJobId = null
+            let pollTimer = null
+
+            function resetUiForNextVideo() {
+                if (pollTimer) {
+                    window.clearTimeout(pollTimer)
+                    pollTimer = null
+                }
+
+                currentJobId = null
+                vodInput.value = ''
+                runBtn.disabled = false
+                resetBtn.disabled = false
+                setStatus('idle', 'Esperando URL.')
+                setError('')
+                renderSteps([])
+                renderOutputs(null)
+                renderLogs([])
+                vodInput.focus()
+            }
+
+            function setStatus(status, message) {
+                statusBadge.textContent = status
+                statusBadge.className = `badge ${status}`
+                statusText.textContent = message
+            }
+
+            function setError(message) {
+                if (!message) {
+                    errorText.hidden = true
+                    errorText.textContent = ''
+                    return
+                }
+
+                errorText.hidden = false
+                errorText.textContent = message
+            }
+
+            function renderSteps(steps = []) {
+                stepsList.innerHTML = ''
+                for (const step of steps) {
+                    const item = document.createElement('li')
+                    item.textContent = `${step.name}: ${step.status}`
+                    stepsList.appendChild(item)
+                }
+            }
+
+            function renderOutputs(outputs) {
+                outputsList.innerHTML = ''
+                if (!outputs) {
+                    const item = document.createElement('li')
+                    item.textContent = 'Sin archivos aun.'
+                    outputsList.appendChild(item)
+                    return
+                }
+
+                for (const [key, value] of Object.entries(outputs)) {
+                    const item = document.createElement('li')
+                    item.textContent = `${key}: ${value}`
+                    outputsList.appendChild(item)
+                }
+            }
+
+            function renderLogs(logs = []) {
+                if (!logs.length) {
+                    logsBox.textContent = '(sin logs)'
+                    return
+                }
+                logsBox.textContent = logs.join('\n')
+                logsBox.scrollTop = logsBox.scrollHeight
+            }
+
+            function updateFromJob(job) {
+                renderSteps(job.steps)
+                renderOutputs(job.outputs)
+                renderLogs(job.logs)
+
+                if (job.status === 'running') {
+                    setStatus('running', `Procesando VOD ${job.vodId}...`)
+                    setError('')
+                    return
+                }
+
+                if (job.status === 'done') {
+                    setStatus('done', `Terminado. Carpeta: ${job.outputDir}`)
+                    setError('')
+                    return
+                }
+
+                setStatus('error', 'El trabajo termino con error.')
+                setError(job.error || 'Error desconocido.')
+            }
+
+            async function readApiJson(response) {
+                const contentType = response.headers.get('content-type') || ''
+                if (!contentType.includes('application/json')) {
+                    const raw = await response.text()
+                    const preview = raw
+                        .slice(0, 160)
+                        .replace(/\s+/g, ' ')
+                        .trim()
+                    throw new Error(
+                        `La API no devolvio JSON. Respuesta: ${preview || '(vacia)'}`,
+                    )
+                }
+
+                return response.json()
+            }
+
+            async function pollJob() {
+                if (!currentJobId) {
+                    return
+                }
+
+                try {
+                    const response = await fetch(`/api/jobs/${currentJobId}`)
+                    const data = await readApiJson(response)
+
+                    if (!response.ok || !data.ok) {
+                        throw new Error(
+                            data.error || 'No se pudo consultar el trabajo.',
+                        )
+                    }
+
+                    updateFromJob(data.job)
+
+                    if (data.job.status === 'running') {
+                        pollTimer = window.setTimeout(pollJob, 1200)
+                        return
+                    }
+
+                    runBtn.disabled = false
+                    resetBtn.disabled = false
+                    currentJobId = null
+                } catch (error) {
+                    setStatus('error', 'Fallo consultando estado')
+                    setError(
+                        error instanceof Error ? error.message : String(error),
+                    )
+                    runBtn.disabled = false
+                    resetBtn.disabled = false
+                    currentJobId = null
+                }
+            }
+
+            runBtn.addEventListener('click', async () => {
+                const url = String(vodInput.value || '').trim()
+                if (!url) {
+                    setError('Introduce una URL o ID de VOD.')
+                    return
+                }
+
+                setError('')
+                setStatus('running', 'Iniciando trabajo...')
+                renderSteps([])
+                renderOutputs(null)
+                renderLogs([])
+                runBtn.disabled = true
+                resetBtn.disabled = true
+
+                if (pollTimer) {
+                    window.clearTimeout(pollTimer)
+                    pollTimer = null
+                }
+
+                try {
+                    const response = await fetch('/api/jobs', {
+                        method: 'POST',
+                        headers: { 'content-type': 'application/json' },
+                        body: JSON.stringify({ url }),
+                    })
+
+                    const data = await readApiJson(response)
+                    if (!response.ok || !data.ok) {
+                        throw new Error(
+                            data.error || 'No se pudo iniciar el trabajo.',
+                        )
+                    }
+
+                    currentJobId = data.job.id
+                    updateFromJob(data.job)
+                    pollJob()
+                } catch (error) {
+                    setStatus('error', 'No se pudo iniciar el trabajo')
+                    setError(
+                        error instanceof Error ? error.message : String(error),
+                    )
+                    runBtn.disabled = false
+                    resetBtn.disabled = false
+                }
+            })
+
+            resetBtn.addEventListener('click', () => {
+                if (currentJobId) {
+                    setError(
+                        'Espera a que termine el trabajo actual para reiniciar.',
+                    )
+                    return
+                }
+                resetUiForNextVideo()
+            })
+        </script>
+    </body>
 </html>
