@@ -91,6 +91,11 @@ function isNoSpaceFailure(error) {
     return /no space left on device|enospc/i.test(haystack)
 }
 
+function isInvalidVodFailure(error) {
+    const haystack = `${error?.message || ''}\n${error?.output || ''}`
+    return /invalid vod|deleted\/expired vod/i.test(haystack)
+}
+
 async function runCommandWithRetries({
     cliPath,
     commandArgs,
@@ -206,14 +211,18 @@ async function runPipeline(job, cliPath) {
                 '-i',
                 chatJsonPath,
                 '--chat-width',
-                '700',
+                '350',
                 '--chat-height',
-                '1200',
+                '600',
                 '--font-size',
                 '22',
                 '--outline',
                 '--outline-size',
                 '2',
+                '--scale-vertical',
+                '0.80',
+                '--scale-section-height',
+                '0.80',
                 '--framerate',
                 '15',
                 '--background-color',
@@ -234,14 +243,18 @@ async function runPipeline(job, cliPath) {
                 '-i',
                 chatJsonPath,
                 '--chat-width',
-                '700',
+                '350',
                 '--chat-height',
-                '1200',
+                '600',
                 '--font-size',
                 '22',
                 '--outline',
                 '--outline-size',
                 '2',
+                '--scale-vertical',
+                '0.80',
+                '--scale-section-height',
+                '0.80',
                 '--framerate',
                 '12',
                 '--background-color',
@@ -314,6 +327,12 @@ async function runPipeline(job, cliPath) {
                 if (isNoSpaceFailure(error)) {
                     throw new Error(
                         'No hay espacio suficiente para renderizar chat-alpha.mov. Libera espacio en disco y vuelve a intentarlo.',
+                    )
+                }
+
+                if (isInvalidVodFailure(error)) {
+                    throw new Error(
+                        `El VOD ${job.vodId} no esta disponible en Twitch. Puede estar borrado, expirado o ser inaccesible.`,
                     )
                 }
 

@@ -37,6 +37,6 @@ export function parseVodInput(rawInput) {
 
     return {
         vodId: match[1],
-        source: input,
+        source: match[1],
     }
 }
