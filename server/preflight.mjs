@@ -53,9 +53,20 @@ export async function runPreflightChecks() {
         )
     }
 
-    if (!isCommandAvailable('ffmpeg', ['-version'])) {
+    const ffmpegCheck = spawnSync('ffmpeg', ['-version'], { encoding: 'utf8' })
+    if (ffmpegCheck.error?.code === 'ENOENT') {
         throw new Error(
             'ffmpeg no esta disponible en PATH. Instala ffmpeg antes de continuar.',
+        )
+    }
+
+    if (ffmpegCheck.status !== 0) {
+        // Installed but crashes on launch (e.g. missing dylib after a brew upgrade).
+        const reason =
+            (ffmpegCheck.stderr || '').trim().split('\n')[0] ||
+            `signal=${String(ffmpegCheck.signal)}`
+        throw new Error(
+            `ffmpeg esta en PATH pero no arranca (${reason}). Prueba con "brew upgrade ffmpeg" o "brew reinstall ffmpeg".`,
         )
     }
 
