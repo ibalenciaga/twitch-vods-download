@@ -2,7 +2,7 @@
 
 ---
 
-<html lang="en">
+<html lang="es">
     <head>
         <meta charset="utf-8" />
         <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
@@ -10,18 +10,36 @@
         <meta name="viewport" content="width=device-width" />
         <meta name="generator" content={Astro.generator} />
         <title>Twitch VOD Downloader Local</title>
-        <style>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link
+            rel="stylesheet"
+            href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&family=Martian+Mono:wdth,wght@75..112.5,400..600&display=swap"
+        />
+        <!-- Global so the step/file nodes built in the script get styled too. -->
+        <style is:global>
             :root {
-                --bg: #f2efe8;
-                --bg-accent: #e8dcc7;
-                --surface: #fffaf2;
-                --ink: #2a251d;
-                --muted: #6b6254;
-                --brand: #175f5d;
-                --brand-soft: #d5eceb;
-                --danger: #9e2a2b;
-                --ok: #2d6a4f;
-                --border: #d7ccb7;
+                color-scheme: dark;
+                --bg: #0e1013;
+                --panel: #15181d;
+                --well: #1c2026;
+                --line: #2a2f37;
+                --ink: #e7e9ee;
+                --muted: #8c94a3;
+                --accent: #a48bff;
+                --accent-ink: #130d26;
+                --run: #f2b544;
+                --ok: #4fd18b;
+                --danger: #ff6b6b;
+                --checker: conic-gradient(
+                    #22262d 25%,
+                    #191c21 0 50%,
+                    #22262d 0 75%,
+                    #191c21 0
+                );
+                --font-body: 'Archivo', 'Avenir Next', 'Segoe UI', sans-serif;
+                --font-mono:
+                    'Martian Mono', ui-monospace, 'SF Mono', Menlo, monospace;
             }
 
             * {
@@ -31,25 +49,27 @@
             body {
                 margin: 0;
                 min-height: 100vh;
-                font-family: 'Avenir Next', 'Segoe UI', sans-serif;
+                font-family: var(--font-body);
                 color: var(--ink);
                 background:
-                    radial-gradient(circle at 15% 20%, #fff 0%, var(--bg) 60%),
-                    linear-gradient(140deg, var(--bg) 0%, var(--bg-accent) 100%);
+                    radial-gradient(
+                        900px 420px at 50% -8%,
+                        #1b1733 0%,
+                        transparent 70%
+                    ),
+                    var(--bg);
                 display: grid;
-                place-items: center;
-                padding: 24px;
+                justify-items: center;
+                align-content: start;
+                padding: 56px 24px;
             }
 
             .card {
-                width: min(880px, 100%);
-                background: var(--surface);
-                border: 1px solid var(--border);
-                border-radius: 18px;
-                box-shadow: 0 18px 30px rgba(33, 27, 16, 0.1);
-                padding: 24px;
-                display: grid;
-                gap: 16px;
+                width: min(920px, 100%);
+                background: var(--panel);
+                border: 1px solid var(--line);
+                border-radius: 14px;
+                box-shadow: 0 30px 60px rgba(0, 0, 0, 0.45);
                 overflow: hidden;
             }
 
@@ -57,53 +77,128 @@
                 min-width: 0;
             }
 
+            .head,
+            .section {
+                padding: 22px 26px;
+            }
+
+            .section {
+                border-top: 1px solid var(--line);
+            }
+
+            .head {
+                display: grid;
+                gap: 14px;
+            }
+
+            .head-top {
+                display: flex;
+                flex-wrap: wrap;
+                justify-content: space-between;
+                align-items: center;
+                gap: 10px 12px;
+            }
+
+            .eyebrow,
+            .label {
+                margin: 0;
+                font-family: var(--font-mono);
+                font-size: 0.66rem;
+                font-weight: 500;
+                letter-spacing: 0.08em;
+                text-transform: uppercase;
+                color: var(--muted);
+            }
+
+            .label {
+                margin-bottom: 12px;
+            }
+
             h1 {
                 margin: 0;
-                font-size: clamp(1.5rem, 2.5vw, 2rem);
-                line-height: 1.15;
+                font-size: clamp(2.1rem, 5.5vw, 3.3rem);
+                font-weight: 800;
+                font-stretch: 68%;
+                line-height: 0.95;
+                letter-spacing: -0.005em;
+                text-transform: uppercase;
+            }
+
+            /* The chat is rendered with alpha, so its word is drawn without fill. */
+            h1 .hollow {
+                color: transparent;
+                -webkit-text-stroke: 1.5px var(--accent);
             }
 
             .subtitle {
                 margin: 0;
+                max-width: 62ch;
                 color: var(--muted);
-                font-size: 0.98rem;
+                font-size: 0.95rem;
+                line-height: 1.5;
             }
 
             .input-row {
                 display: grid;
                 grid-template-columns: 1fr auto auto;
-                gap: 10px;
+                gap: 8px;
+                margin-top: 6px;
             }
 
             input {
                 width: 100%;
-                padding: 12px 14px;
-                border-radius: 11px;
-                border: 1px solid var(--border);
-                background: #fff;
-                font-size: 0.95rem;
+                padding: 13px 14px;
+                border-radius: 9px;
+                border: 1px solid var(--line);
+                background: var(--well);
+                color: var(--ink);
+                font-family: var(--font-mono);
+                font-size: 0.8rem;
+                font-stretch: 87.5%;
+            }
+
+            input::placeholder {
+                color: #5d6573;
+            }
+
+            input:focus {
+                outline: none;
+                border-color: var(--accent);
+                box-shadow: 0 0 0 3px rgba(164, 139, 255, 0.22);
             }
 
             button {
-                border: none;
-                padding: 12px 16px;
-                border-radius: 11px;
-                font-size: 0.95rem;
+                border: 1px solid transparent;
+                padding: 12px 18px;
+                border-radius: 9px;
+                font-family: var(--font-body);
+                font-size: 0.92rem;
                 font-weight: 700;
                 cursor: pointer;
-                background: var(--brand);
-                color: #fff;
-                transition: transform 120ms ease;
+                background: var(--accent);
+                color: var(--accent-ink);
+                transition:
+                    transform 120ms ease,
+                    background-color 120ms ease;
+            }
+
+            button:focus-visible {
+                outline: 2px solid var(--accent);
+                outline-offset: 2px;
             }
 
             .secondary-btn {
-                background: #f0e7d8;
-                color: #3f382e;
-                border: 1px solid var(--border);
+                background: transparent;
+                color: var(--ink);
+                border-color: var(--line);
+            }
+
+            .secondary-btn:not(:disabled):hover {
+                background: var(--well);
             }
 
             button:disabled {
-                opacity: 0.7;
+                opacity: 0.45;
                 cursor: not-allowed;
             }
 
@@ -113,41 +208,62 @@
 
             .badge {
                 display: inline-flex;
-                padding: 4px 10px;
+                align-items: center;
+                gap: 7px;
+                padding: 5px 10px;
                 border-radius: 999px;
-                font-size: 0.84rem;
-                font-weight: 700;
-                letter-spacing: 0.01em;
+                font-family: var(--font-mono);
+                font-size: 0.66rem;
+                font-weight: 600;
+                letter-spacing: 0.06em;
+                text-transform: uppercase;
+                color: var(--muted);
+                background: color-mix(in srgb, currentColor 12%, transparent);
+                white-space: nowrap;
             }
 
-            .badge.idle,
+            .badge::before {
+                content: '';
+                width: 7px;
+                height: 7px;
+                border-radius: 50%;
+                background: currentColor;
+            }
+
             .badge.running {
-                background: var(--brand-soft);
-                color: #164847;
+                color: var(--run);
+            }
+
+            .badge.running::before {
+                animation: pulse 1.2s ease-in-out infinite;
             }
 
             .badge.done {
-                background: #d9f4e8;
                 color: var(--ok);
             }
 
             .badge.error {
-                background: #f9d9d9;
                 color: var(--danger);
             }
 
-            pre {
+            .status-text {
                 margin: 0;
-                max-height: 240px;
-                overflow: auto;
-                padding: 12px;
-                background: #1f1f1f;
-                color: #f0f0f0;
-                border-radius: 12px;
-                font-size: 0.78rem;
-                white-space: pre-wrap;
+                font-family: var(--font-mono);
+                font-size: 0.74rem;
+                color: var(--muted);
                 overflow-wrap: anywhere;
-                word-break: break-word;
+            }
+
+            .error {
+                margin: 0;
+                padding: 10px 12px;
+                border-radius: 8px;
+                border: 1px solid color-mix(in srgb, var(--danger) 40%, transparent);
+                background: color-mix(in srgb, var(--danger) 10%, transparent);
+                color: #ffb3b3;
+                font-size: 0.88rem;
+                line-height: 1.45;
+                overflow-wrap: anywhere;
             }
 
             .steps,
@@ -159,73 +275,268 @@
                 list-style: none;
             }
 
-            .steps li,
-            .outputs li {
-                border: 1px solid var(--border);
-                border-radius: 10px;
+            .steps {
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+                gap: 6px;
+            }
+
+            .step {
+                position: relative;
+                display: grid;
+                gap: 6px;
+                align-content: start;
+                padding: 12px 14px 15px;
+                border-radius: 8px;
+                border: 1px solid var(--line);
+                background: var(--well);
+                overflow: hidden;
+            }
+
+            .step.alpha {
+                background: var(--checker);
+                background-size: 14px 14px;
+            }
+
+            .step::after {
+                content: '';
+                position: absolute;
+                inset: auto 0 0 0;
+                height: 3px;
+            }
+
+            .step-top {
+                display: flex;
+                justify-content: space-between;
+                gap: 8px;
+                font-family: var(--font-mono);
+                font-size: 0.64rem;
+                letter-spacing: 0.04em;
+                color: var(--muted);
+            }
+
+            .step-name {
+                font-size: 0.95rem;
+                font-weight: 600;
+                line-height: 1.25;
+            }
+
+            .step-cmd {
+                font-family: var(--font-mono);
+                font-size: 0.66rem;
+                color: var(--muted);
+            }
+
+            .step[data-status='pending'] .step-name {
+                color: var(--muted);
+            }
+
+            .step[data-status='running'] {
+                border-color: color-mix(in srgb, var(--run) 50%, var(--line));
+            }
+
+            .step[data-status='running'] .step-state {
+                color: var(--run);
+            }
+
+            .step[data-status='running']::after {
+                background: linear-gradient(
+                        90deg,
+                        transparent,
+                        var(--run),
+                        transparent
+                    )
+                    no-repeat;
+                background-size: 50% 100%;
+                animation: sweep 1.4s linear infinite;
+            }
+
+            .step[data-status='done'] {
+                border-color: color-mix(in srgb, var(--ok) 40%, var(--line));
+            }
+
+            .step[data-status='done'] .step-state {
+                color: var(--ok);
+            }
+
+            .step[data-status='done']::after {
+                background: var(--ok);
+            }
+
+            .step[data-status='error'] {
+                border-color: color-mix(in srgb, var(--danger) 55%, var(--line));
+            }
+
+            .step[data-status='error'] .step-state {
+                color: var(--danger);
+            }
+
+            .step[data-status='error']::after {
+                background: var(--danger);
+            }
+
+            .file {
+                display: grid;
+                grid-template-columns: auto minmax(0, 1fr) auto;
+                align-items: center;
+                gap: 14px;
                 padding: 10px 12px;
-                background: #fff;
+                border-radius: 8px;
+                border: 1px solid var(--line);
+                background: var(--well);
+            }
+
+            .swatch {
+                width: 44px;
+                height: 28px;
+                border-radius: 5px;
+                border: 1px solid var(--line);
+                background: linear-gradient(135deg, #2c2a40, #1a1c22);
+            }
+
+            .swatch.alpha {
+                background: var(--checker);
+                background-size: 8px 8px;
+            }
+
+            .file-name {
+                font-weight: 600;
+                font-size: 0.92rem;
+            }
+
+            .file-path {
+                margin-top: 2px;
+                font-family: var(--font-mono);
+                font-size: 0.66rem;
+                color: var(--muted);
+                overflow-wrap: anywhere;
+            }
+
+            .file-kind {
+                font-family: var(--font-mono);
+                font-size: 0.62rem;
+                letter-spacing: 0.06em;
+                text-transform: uppercase;
+                color: var(--muted);
+            }
+
+            .empty {
+                padding: 14px;
+                border-radius: 8px;
+                border: 1px dashed var(--line);
+                color: var(--muted);
+                font-size: 0.88rem;
+            }
+
+            pre {
+                margin: 0;
+                max-height: 280px;
+                overflow: auto;
+                padding: 14px 16px;
+                background: #0a0b0e;
+                border: 1px solid var(--line);
+                color: #c3c8d1;
+                border-radius: 8px;
+                font-family: var(--font-mono);
+                font-size: 0.7rem;
+                font-stretch: 87.5%;
+                line-height: 1.65;
+                white-space: pre-wrap;
                 overflow-wrap: anywhere;
                 word-break: break-word;
+                scrollbar-color: var(--line) transparent;
             }
 
-            .label {
-                font-size: 0.88rem;
-                font-weight: 700;
-                color: var(--muted);
-                margin-bottom: 6px;
+            @keyframes sweep {
+                from {
+                    background-position: -100% 0;
+                }
+                to {
+                    background-position: 200% 0;
+                }
             }
 
-            .error {
-                color: var(--danger);
-                font-weight: 600;
+            @keyframes pulse {
+                50% {
+                    opacity: 0.3;
+                }
             }
 
             @media (max-width: 640px) {
-                .input-row {
+                body {
+                    padding: 24px 16px;
+                }
+
+                .head,
+                .section {
+                    padding: 18px;
+                }
+
+                .input-row,
+                .steps {
                     grid-template-columns: 1fr;
+                }
+
+                .file {
+                    grid-template-columns: auto minmax(0, 1fr);
+                }
+
+                .file-kind {
+                    display: none;
+                }
+            }
+
+            @media (prefers-reduced-motion: reduce) {
+                *,
+                *::before,
+                *::after {
+                    animation: none !important;
+                    transition: none !important;
                 }
             }
         </style>
     </head>
     <body>
         <main class="card">
-            <h1>Twitch VOD + Chat (Local)</h1>
-            <p class="subtitle">
-                Introduce una URL tipo https://www.twitch.tv/videos/2818539320 y
-                la app generara VOD y chat-alpha.mov (transparente) en
-                Descargas.
-            </p>
+            <header class="head">
+                <div class="head-top">
+                    <p class="eyebrow">Local · TwitchDownloaderCLI + ffmpeg</p>
+                    <span id="status-badge" class="badge idle">En espera</span>
+                </div>
+                <h1>Twitch VOD + <span class="hollow">chat</span></h1>
+                <p class="subtitle">
+                    Introduce una URL tipo https://www.twitch.tv/videos/2818539320
+                    y la app generara VOD y chat-alpha.mov (transparente) en
+                    Descargas.
+                </p>
 
-            <div class="input-row">
-                <input
-                    id="vod-input"
-                    placeholder="https://www.twitch.tv/videos/2818539320"
-                    autocomplete="off"
-                />
-                <button id="run-btn">Generar Archivos</button>
-                <button id="reset-btn" class="secondary-btn" type="button">
-                    Nuevo Video
-                </button>
-            </div>
+                <div class="input-row">
+                    <input
+                        id="vod-input"
+                        placeholder="https://www.twitch.tv/videos/2818539320"
+                        autocomplete="off"
+                        aria-label="URL o ID del VOD"
+                    />
+                    <button id="run-btn">Generar Archivos</button>
+                    <button id="reset-btn" class="secondary-btn" type="button">
+                        Nuevo Video
+                    </button>
+                </div>
 
-            <div>
-                <span id="status-badge" class="badge idle">idle</span>
-                <p id="status-text" class="subtitle">Esperando URL.</p>
+                <p id="status-text" class="status-text">Esperando URL.</p>
                 <p id="error-text" class="error" hidden></p>
-            </div>
+            </header>
 
-            <section>
+            <section class="section">
                 <div class="label">Pasos</div>
-                <ul id="steps" class="steps"></ul>
+                <ol id="steps" class="steps"></ol>
             </section>
 
-            <section>
+            <section class="section">
                 <div class="label">Archivos generados</div>
                 <ul id="outputs" class="outputs"></ul>
             </section>
 
-            <section>
+            <section class="section">
                 <div class="label">Logs</div>
                 <pre id="logs">(sin logs)</pre>
             </section>
@@ -243,8 +554,64 @@
             const stepsList = document.getElementById('steps')
             const outputsList = document.getElementById('outputs')
 
+            const STATUS_LABELS = {
+                idle: 'En espera',
+                running: 'Procesando',
+                done: 'Listo',
+                error: 'Error',
+            }
+
+            const STEP_LABELS = {
+                pending: 'En cola',
+                running: 'En curso',
+                done: 'Hecho',
+                error: 'Error',
+            }
+
+            const OUTPUT_LABELS = {
+                vod: 'VOD',
+                chatAlphaMov: 'Chat transparente',
+            }
+
+            // Shown before a job starts so the pipeline is visible up front.
+            const DEFAULT_STEPS = [
+                { name: 'Descargar VOD', command: 'videodownload', status: 'pending' },
+                { name: 'Descargar chat JSON', command: 'chatdownload', status: 'pending' },
+                {
+                    name: 'Renderizar chat MOV transparente',
+                    command: 'chatrender',
+                    status: 'pending',
+                },
+            ]
+
             let currentJobId = null
             let pollTimer = null
+
+            function el(tag, className, text) {
+                const node = document.createElement(tag)
+                if (className) {
+                    node.className = className
+                }
+                if (text !== undefined) {
+                    node.textContent = text
+                }
+                return node
+            }
+
+            function formatDuration(step) {
+                if (!step.startedAt) {
+                    return ''
+                }
+
+                const end = step.endedAt ? Date.parse(step.endedAt) : Date.now()
+                const seconds = Math.max(
+                    0,
+                    Math.round((end - Date.parse(step.startedAt)) / 1000),
+                )
+                const minutes = Math.floor(seconds / 60)
+                const rest = String(seconds % 60).padStart(2, '0')
+                return minutes ? `${minutes}m ${rest}s` : `${seconds}s`
+            }
 
             function resetUiForNextVideo() {
                 if (pollTimer) {
@@ -265,7 +632,7 @@
             }
 
             function setStatus(status, message) {
-                statusBadge.textContent = status
+                statusBadge.textContent = STATUS_LABELS[status] || status
                 statusBadge.className = `badge ${status}`
                 statusText.textContent = message
             }
@@ -282,26 +649,59 @@
             }
 
             function renderSteps(steps = []) {
+                const list = steps.length ? steps : DEFAULT_STEPS
                 stepsList.innerHTML = ''
-                for (const step of steps) {
-                    const item = document.createElement('li')
-                    item.textContent = `${step.name}: ${step.status}`
+
+                list.forEach((step, index) => {
+                    const item = el(
+                        'li',
+                        step.command === 'chatrender' ? 'step alpha' : 'step',
+                    )
+                    item.dataset.status = step.status
+
+                    const duration = formatDuration(step)
+                    const state = STEP_LABELS[step.status] || step.status
+                    const top = el('div', 'step-top')
+                    top.append(
+                        el('span', 'step-index', `${index + 1}/${list.length}`),
+                        el(
+                            'span',
+                            'step-state',
+                            duration ? `${state} · ${duration}` : state,
+                        ),
+                    )
+
+                    item.append(
+                        top,
+                        el('div', 'step-name', step.name),
+                        el('div', 'step-cmd', step.command),
+                    )
                     stepsList.appendChild(item)
-                }
+                })
             }
 
             function renderOutputs(outputs) {
                 outputsList.innerHTML = ''
                 if (!outputs) {
-                    const item = document.createElement('li')
-                    item.textContent = 'Sin archivos aun.'
-                    outputsList.appendChild(item)
+                    outputsList.appendChild(el('li', 'empty', 'Sin archivos aun.'))
                     return
                 }
 
                 for (const [key, value] of Object.entries(outputs)) {
-                    const item = document.createElement('li')
-                    item.textContent = `${key}: ${value}`
+                    const item = el('li', 'file')
+                    const info = el('div')
+                    info.append(
+                        el('div', 'file-name', String(value).split('/').pop()),
+                        el('div', 'file-path', value),
+                    )
+                    item.append(
+                        el(
+                            'span',
+                            key === 'chatAlphaMov' ? 'swatch alpha' : 'swatch',
+                        ),
+                        info,
+                        el('span', 'file-kind', OUTPUT_LABELS[key] || key),
+                    )
                     outputsList.appendChild(item)
                 }
             }
@@ -444,6 +844,9 @@
                 }
                 resetUiForNextVideo()
             })
+
+            renderSteps([])
+            renderOutputs(null)
         </script>
     </body>
 </html>
